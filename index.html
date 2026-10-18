@@ -1415,7 +1415,7 @@ const iv=setInterval(()=>{
   x.restore();
   if(msgT>0){x.fillStyle='#f1f2ff';x.font='bold 22px system-ui';x.textAlign='center';x.shadowColor='#000';x.shadowBlur=6;x.fillText(msg,W/2,H*0.42);x.shadowBlur=0}
   x.fillStyle='#f1f2ffaa';x.font='12px system-ui';x.textAlign='left';x.fillText('Space / tap to swing',10,H-12);
-  if(dead){x.fillStyle='#f1f2ff';x.font='18px system-ui';x.textAlign='center';x.fillText('All out! '+sc+' runs',W/2,H*0.4)}
+  if(dead&&!$('#ar .ov')){x.fillStyle='#f1f2ff';x.font='18px system-ui';x.textAlign='center';x.fillText('All out! '+sc+' runs',W/2,H*0.4)}
   x.restore();
 },16);
 return()=>{dead=1;timers.forEach(clearTimeout);clearInterval(iv);removeEventListener('keydown',onKey)}}
@@ -1454,6 +1454,7 @@ const iv=setInterval(()=>{
   cars.forEach(car=>{car.y+=car.s+spd*0.55});
   boosts.forEach(b=>b.y+=spd);
   cars=cars.filter(car=>{
+    if(dead)return true;
     if(car.y>500){sc+=12;return false}
     if(Math.abs(car.x-px)<32&&Math.abs(car.y-400)<46){
       lives--;beep(110,0.3,'sawtooth');vb(50);msg='Crash!';msgT=35;
@@ -1539,7 +1540,7 @@ let over=0;
 const hud=t=>{if(my!==SEQ||over)return;$('#hud').textContent=t;if(t==last)return;last=t;
 const lose=TERM.test(t)&&!/^You win/.test(t);
 if(lose){over=1;jingle([392,330,262,196]);vb([90,50,90]);ov(t,0)}else if(WIN.test(t)){over=1;jingle([523,659,784,1047]);vb(50);burst();ov(t,1)}else if(DRW.test(t)){over=1;ov(t,2)}else if(/^Score|^\d+ moves|^You \d/.test(t))beep(660,.05);
-if(mode&&(lose||WIN.test(t)||DRW.test(t))){const m=mode=='hi'?t.match(/(\d+)/):t.match(/^Done in (\d+)/);if(m){const v=+m[1];if(mode=='hi'?v>best:(!best||v<best)){best=v;nb=1;try{localStorage.setItem(k,v)}catch(e){}sb()}}}};
+if(mode){const m=mode=='hi'?(t.match(/Score\s*(\d+)/)||t.match(/(\d+)\s*runs/)||t.match(/(?:over:|out:)\s*(\d+)/)||t.match(/(\d+)\s*pts/)):t.match(/^Done in (\d+)/);if(m){const v=+m[1];if(mode=='hi'?v>best:(!best||v<best)){best=v;nb=1;try{localStorage.setItem(k,v)}catch(e){}sb()}}}};
 stop=g.f($('#ar'),hud)||(()=>{});buildPad(g.id);requestAnimationFrame(fit)}
 /* ---- Custom neon icons + non-animal rethemes ---- */
 {const T='#2bffea',P='#ff2bd6',Y='#ffe62b',V='#9d6bff',G='#7dff6b',
