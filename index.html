@@ -280,7 +280,7 @@ x.fillStyle='#2fd16a';x.strokeStyle='#1e8f4a';x.lineWidth=2;x.beginPath();x.elli
 [1,-1].forEach(k=>{const ex=hx+dx*3+px*5*k,ey=hy+dy*3+py*5*k;x.fillStyle='#fff';x.beginPath();x.arc(ex,ey,3.2,0,7);x.fill();x.fillStyle='#000';x.beginPath();x.arc(ex+dx,ey+dy,1.6,0,7);x.fill()})}};
 let iv;const tick=()=>{if(dead)return;d=nd;const h=[s[0][0]+d[0],s[0][1]+d[1]];if(DF==0){h[0]=(h[0]+15)%15;h[1]=(h[1]+15)%15}
 if(h[0]<0||h[1]<0||h[0]>14||h[1]>14){dead=1;hud('Game over: '+sc);return}const eat=h[0]==f[0]&&h[1]==f[1];if((eat?s:s.slice(0,-1)).some(p=>p[0]==h[0]&&p[1]==h[1])){dead=1;hud('Game over: '+sc);return}
-s.unshift(h);if(eat){sc++;hud('Score '+sc);let tries=0;do f=[Math.random()*15|0,Math.random()*15|0];while(s.some(p=>p[0]==f[0]&&p[1]==f[1])&&++tries<500)}else s.pop();
+s.unshift(h);if(eat){sc++;hud('Score '+sc);const free=[];for(let i=0;i<15;i++)for(let j=0;j<15;j++)if(!s.some(p=>p[0]==i&&p[1]==j))free.push([i,j]);if(free.length)f=free[Math.random()*free.length|0];else{dead=1;hud('Game over: '+sc)}}else s.pop();
 draw();iv=setTimeout(tick,Math.max([90,60,40][DF],[150,115,80][DF]-sc*3))};draw();iv=setTimeout(tick,[150,115,80][DF]);
 return()=>{dead=1;clearTimeout(iv);removeEventListener('keydown',key)}}
 
@@ -1464,7 +1464,7 @@ const iv=setInterval(()=>{
     }
     return true;
   });
-  boosts=boosts.filter(b=>{
+  if(!dead)boosts=boosts.filter(b=>{
     if(b.y>500)return false;
     if(Math.hypot(b.x-px,b.y-400)<26){
       sc+=30;nitro=90;msg='NITRO!';msgT=28;beep(1000,0.1,'triangle');
@@ -1473,8 +1473,8 @@ const iv=setInterval(()=>{
     }
     return true;
   });
-  sc+=1;if(sc>=need){level++;need=sc+320+level*90;msg='Level '+level+'!';msgT=40;jingle([523,659,784]);show()}
-  if(t%10===0)show();
+  if(!dead){sc+=1;if(sc>=need){level++;need=sc+320+level*90;msg='Level '+level+'!';msgT=40;jingle([523,659,784]);show()}}
+  if(t%10===0&&!dead)show();
   if(msgT>0)msgT--;
   particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.l-=0.04});particles=particles.filter(p=>p.l>0);
   /* draw */
@@ -1536,9 +1536,10 @@ const ov=(t,w)=>setTimeout(()=>{if(cur!==g||my!==SEQ||last!=t||$('#ar .ov'))retu
 const sb=()=>$('#bs').textContent=mode&&best?' · Best '+best:'';sb();
 const TERM=/Computer wins|CPU wins|Boom|Game over|No moves|The word was|All out/,WIN=/win|Cleared|Done|Time!|You got it/,DRW=/^Stalemate|^Draw/;
 let over=0;
-const hud=t=>{if(over&&!(TERM.test(t)||WIN.test(t)||DRW.test(t)))return;$('#hud').textContent=t;if(t==last)return;last=t;
-if(TERM.test(t)){over=1;jingle([392,330,262,196]);vb([90,50,90]);ov(t,0)}else if(WIN.test(t)){over=1;jingle([523,659,784,1047]);vb(50);burst();ov(t,1)}else if(DRW.test(t)){over=1;ov(t,2)}else if(/^Score|^\d+ moves|^You \d/.test(t))beep(660,.05);
-if(mode){const m=mode=='hi'?t.match(/(\d+)/):t.match(/^Done in (\d+)/);if(m){const v=+m[1];if(mode=='hi'?v>best:(!best||v<best)){best=v;nb=1;try{localStorage.setItem(k,v)}catch(e){}sb()}}}};
+const hud=t=>{if(my!==SEQ||over)return;$('#hud').textContent=t;if(t==last)return;last=t;
+const lose=TERM.test(t)&&!/^You win/.test(t);
+if(lose){over=1;jingle([392,330,262,196]);vb([90,50,90]);ov(t,0)}else if(WIN.test(t)){over=1;jingle([523,659,784,1047]);vb(50);burst();ov(t,1)}else if(DRW.test(t)){over=1;ov(t,2)}else if(/^Score|^\d+ moves|^You \d/.test(t))beep(660,.05);
+if(mode&&(lose||WIN.test(t)||DRW.test(t))){const m=mode=='hi'?t.match(/(\d+)/):t.match(/^Done in (\d+)/);if(m){const v=+m[1];if(mode=='hi'?v>best:(!best||v<best)){best=v;nb=1;try{localStorage.setItem(k,v)}catch(e){}sb()}}}};
 stop=g.f($('#ar'),hud)||(()=>{});buildPad(g.id);requestAnimationFrame(fit)}
 /* ---- Custom neon icons + non-animal rethemes ---- */
 {const T='#2bffea',P='#ff2bd6',Y='#ffe62b',V='#9d6bff',G='#7dff6b',
